@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout the GitHub repository with the specified credentials
-                git credentialsId: 'github-token', url: 'https://github.com/mladenovskistefan111/app-react'
+                git credentialsId: 'github-token', url: 'https://github.com/mladenovskistefan111/app-react', branch: 'dev'
             }
         }
 
