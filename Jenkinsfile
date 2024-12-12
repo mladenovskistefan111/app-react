@@ -37,7 +37,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker --version'
+                    sh 'docker build -t mladenovskistefan/app-react:latest .'
                 }
             }
         }
