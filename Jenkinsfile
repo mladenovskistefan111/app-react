@@ -9,7 +9,6 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the GitHub repository with the specified credentials
                 git credentialsId: 'github-token', url: 'https://github.com/mladenovskistefan111/app-react', branch: 'dev'
             }
         }
@@ -20,15 +19,11 @@ pipeline {
                     def latestTag = sh(script: "git describe --tags --abbrev=0", returnStdout: true).trim()
 
                     if (latestTag == '') {
-                        latestTag = 'v1.0.0'
+                        error('No tags found in the repository!')
                     }
 
-                    def (major, minor, patch) = latestTag.replace('v', '').tokenize('.')
-                    def newPatch = patch.toInteger() + 1
-                    def newTag = "v${major}.${minor}.${newPatch}"
-
-                    env.NEW_TAG = newTag
-                    echo "New Docker tag: ${newTag}"
+                    env.NEW_TAG = latestTag
+                    echo "Using Docker tag: ${latestTag}"
 
                 }
             }
@@ -37,15 +32,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t mladenovskistefan/app-react:latest .'
-                }
-            }
-        }
-
-        stage('Tag Image') {
-            steps {
-                script {
-                    sh "docker tag mladenovskistefan/app-react:latest mladenovskistefan/app-react:${env.NEW_TAG}"
+                    sh "docker build -t mladenovskistefan/app-react:${env.NEW_TAG} ."
                 }
             }
         }
@@ -55,8 +42,6 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-token', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-                        // Push both the 'latest' and the new versioned tags to DockerHub
-                        sh 'docker push mladenovskistefan/app-react:latest'
                         sh "docker push mladenovskistefan/app-react:${env.NEW_TAG}"
                     }
                 }
